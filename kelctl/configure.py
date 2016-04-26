@@ -18,20 +18,31 @@ def release(config, channel):
     )
     r.raise_for_status()
     config["release"] = json.loads(r.content.decode("utf-8"))
+    config["release"].update({
+        "channel": channel,
+        "version": channels[channel],
+    })
 
 
 def gce(config, project_id, region, zone):
     layer = config.setdefault("layer-0", {})
     layer["provider"] = {
-        "type": "gce",
+        "kind": "gce",
         "project-id": project_id,
         "region": region,
         "zone": zone,
     }
 
 
+def layer0(config, pod_network, service_network, dns_service_ip):
+    layer = config.setdefault("layer-0", {})
+    layer["pod-network"] = pod_network
+    layer["service-network"] = service_network
+    layer["dns-service-ip"] = dns_service_ip
+
+
 # @@@ determine how to make this customizable
-def resources_std(config):
+def resources_std(config, master_ip):
     layer = config.setdefault("layer-0", {})
     layer["resources"] = {
         "network": {
@@ -70,3 +81,5 @@ def resources_std(config):
             }
         ]
     }
+    if master_ip:
+        layer["resources"]["master-ip"] = master_ip

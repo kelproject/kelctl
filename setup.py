@@ -26,6 +26,7 @@ setup(
         "PyYAML==3.11",
         "requests==2.9.1",
         "Click==6.6",
+        "kel-cluster",
     ],
     zip_safe=False
 )
