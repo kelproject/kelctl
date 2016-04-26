@@ -75,7 +75,6 @@ def cmd_configure(name, channel, layer, provider, gce_project_id, gce_region, gc
     """
     if os.path.exists("cluster.yml"):
         error("already configured. Delete cluster.yml to re-configure.")
-    config = {}
     if name is None:
         error("--name was not given.")
     if layer is None:
@@ -89,10 +88,11 @@ def cmd_configure(name, channel, layer, provider, gce_project_id, gce_region, gc
             error("--gce-region was not given.")
         if gce_zone is None:
             error("--gce-zone was not given.")
-        config = configure.name(config, name)
-        config = configure.release(config, channel)
-        config = configure.gce(config, gce_project_id, gce_region, gce_zone)
-        config = configure.resources_std(config)
+        config = {}
+        configure.name(config, name)
+        configure.release(config, channel)
+        configure.gce(config, gce_project_id, gce_region, gce_zone)
+        configure.resources_std(config)
     with open("cluster.yml", "w") as fp:
         fp.write(yaml.safe_dump(config, default_flow_style=False))
 
