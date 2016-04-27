@@ -214,6 +214,22 @@ def provision():
         fp.write(yaml.safe_dump(cluster.config, default_flow_style=False))
 
 
+@cli.command()
+def destroy():
+    """
+    Destroy Kel Layer 0.
+    """
+    if not os.path.exists("cluster.yml"):
+        error("cluster.yml does not exist. Did you configure?")
+    with open("cluster.yml") as fp:
+        config = yaml.load(fp.read())
+    cluster = Cluster(config)
+    cluster.key_keeper = KeyKeeper("./keys")
+    click.echo("Destroying...")
+    cluster.destroy()
+    click.echo("Done.")
+
+
 @cli.command("set-kubectl-credentials")
 def set_kubectl_credentials():
     """
