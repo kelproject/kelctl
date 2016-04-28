@@ -1,10 +1,16 @@
 import json
+import random
+import string
 
 import requests
 
 
 def name(config, name):
     config["name"] = name
+
+
+def domain(config, domain):
+    config["domain"] = domain
 
 
 def release(config, channel):
@@ -39,6 +45,21 @@ def layer0(config, pod_network, service_network, dns_service_ip):
     layer["pod-network"] = pod_network
     layer["service-network"] = service_network
     layer["dns-service-ip"] = dns_service_ip
+
+
+def layer1(config, identity_url, subdomain):
+    layer = config.setdefault("layer-1", {})
+    layer.update({
+        "identity-url": identity_url,
+        "api": {
+            "host": "{}.{}".format(subdomain, config["domain"]),
+            "database": {
+                "username": "".join(random.choice(string.ascii_lowercase + string.digits) for _ in range(8)),
+                "password": "".join(random.choice(string.ascii_lowercase + string.digits) for _ in range(32)),
+                "name": "kel",
+            },
+        },
+    })
 
 
 # @@@ determine how to make this customizable

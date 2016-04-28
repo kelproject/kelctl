@@ -118,6 +118,10 @@ def generate_keys():
     help="Name of cluster to configure.",
 )
 @click.option(
+    "--domain",
+    help="Domain of cluster to configure.",
+)
+@click.option(
     "--channel",
     default="dev",
     help="Name of cluster to configure.",
@@ -166,17 +170,27 @@ def generate_keys():
     default="10.3.0.10",
     help="IP address for Kubernetes kube-dns service.",
 )
-def cmd_configure(name, channel, layer, provider, gce_project_id, gce_region, gce_zone, master_ip, pod_network, service_network, dns_service_ip):
+@click.option(
+    "--identity-url",
+    default="https://identity.kelproject.com",
+    help="[Layer 1] URL for identity service.",
+)
+@click.option(
+    "--api-subdomain",
+    default="api",
+    help="[Layer 1] Subdomain to use for API (relative to cluster.domain)",
+)
+def cmd_configure(name, domain, channel, layer, provider, gce_project_id, gce_region, gce_zone, master_ip, pod_network, service_network, dns_service_ip, identity_url, api_subdomain):
     """
     Configure a Kel cluster.
     """
-    if os.path.exists("cluster.yml"):
-        error("already configured. Delete cluster.yml to re-configure.")
-    if name is None:
-        error("--name was not given.")
     if layer is None:
         error("--layer was not given.")
     if layer == "0":
+        if os.path.exists("cluster.yml"):
+            error("already configured. Delete cluster.yml to re-configure.")
+        if name is None:
+            error("--name was not given.")
         if provider is None:
             error("--provider was not given.")
         if provider == "gce":
@@ -188,10 +202,19 @@ def cmd_configure(name, channel, layer, provider, gce_project_id, gce_region, gc
                 error("--gce-zone was not given.")
             config = {}
             configure.name(config, name)
+            configure.domain(config, domain)
             configure.release(config, channel)
             configure.gce(config, gce_project_id, gce_region, gce_zone)
             configure.layer0(config, pod_network, service_network, dns_service_ip)
             configure.resources_std(config, master_ip)
+    elif layer == "1":
+        if not os.path.exists("cluster.yml"):
+            error("no cluster.yml found. Did you configure layer 0?")
+        with open("cluster.yml") as fp:
+            config = yaml.load(fp.read())
+        if "layer-1" in config:
+            error("already configured. Remove layer-1 configuration to re-configure.")
+        configure.layer1(config, identity_url, api_subdomain)
     with open("cluster.yml", "w") as fp:
         fp.write(yaml.safe_dump(config, default_flow_style=False))
 
