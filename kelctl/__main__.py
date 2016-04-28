@@ -196,6 +196,32 @@ def cmd_configure(name, channel, layer, provider, gce_project_id, gce_region, gc
         fp.write(yaml.safe_dump(config, default_flow_style=False))
 
 
+@cli.command("update-release")
+@click.option(
+    "--channel",
+    default="dev",
+    help="Release channel.",
+)
+def update_release(channel):
+    """
+    Update release manifests.
+    """
+    if not os.path.exists("cluster.yml"):
+        error("no cluster.yml found. Did you configure?")
+    with open("cluster.yml") as fp:
+        config = yaml.load(fp.read())
+    if channel is None:
+        channel = config["release"]["channel"]
+    current_version = config["release"]["version"]
+    configure.release(config, channel)
+    if current_version == config["release"]["version"]:
+        click.echo("No updates available for {} channel".format(channel))
+        sys.exit(0)
+    click.echo("Updating config to {} in {} channel".format(config["release"]["version"], channel))
+    with open("cluster.yml", "w") as fp:
+        fp.write(yaml.safe_dump(config, default_flow_style=False))
+
+
 @cli.command()
 def provision():
     """
