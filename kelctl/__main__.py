@@ -8,7 +8,16 @@ import tempfile
 import click
 import yaml
 
-from kel.cluster import Cluster, KeyKeeper
+from kel.cluster import (
+    Cluster,
+    KeyKeeper,
+    KubeDNS,
+    KelSystem,
+    Router,
+    ApiCache,
+    ApiDatabase,
+    ApiWeb,
+)
 
 from . import configure
 
@@ -180,7 +189,33 @@ def generate_keys():
     default="api",
     help="[Layer 1] Subdomain to use for API (relative to cluster.domain)",
 )
-def cmd_configure(name, domain, channel, layer, provider, gce_project_id, gce_region, gce_zone, master_ip, pod_network, service_network, dns_service_ip, identity_url, api_subdomain):
+@click.option(
+    "--router-ip",
+    help="[Layer 1] IP to use for HTTP/TLS routing.",
+)
+@click.option(
+    "--api-cache-disk-type",
+    default="pd-standard",
+    help="[Layer 1 / GCE] API cache disk type (pd-ssd or pd-standard; pd-standard is default).",
+)
+@click.option(
+    "--api-cache-disk-size",
+    default=100,
+    type=int,
+    help="[Layer 1 / GCE] API cache disk size (in GB; 100 is default).",
+)
+@click.option(
+    "--api-database-disk-type",
+    default="pd-standard",
+    help="[Layer 1 / GCE] API database disk type (pd-ssd or pd-standard; pd-standard is default).",
+)
+@click.option(
+    "--api-database-disk-size",
+    default=100,
+    type=int,
+    help="[Layer 1 / GCE] API database disk size (in GB; 100 is default).",
+)
+def cmd_configure(name, domain, channel, layer, provider, gce_project_id, gce_region, gce_zone, master_ip, pod_network, service_network, dns_service_ip, identity_url, api_subdomain, router_ip, api_cache_disk_size, api_cache_disk_type, api_database_disk_size, api_database_disk_type):
     """
     Configure a Kel cluster.
     """
@@ -214,7 +249,7 @@ def cmd_configure(name, domain, channel, layer, provider, gce_project_id, gce_re
             config = yaml.load(fp.read())
         if "layer-1" in config:
             error("already configured. Remove layer-1 configuration to re-configure.")
-        configure.layer1(config, identity_url, api_subdomain)
+        configure.layer1(config, identity_url, api_subdomain, router_ip, api_cache_disk_size, api_cache_disk_type, api_database_disk_size, api_database_disk_type)
     with open("cluster.yml", "w") as fp:
         fp.write(yaml.safe_dump(config, default_flow_style=False))
 
@@ -324,6 +359,59 @@ def set_kubectl_credentials():
     )
     with open(kubeconfig_path, "w") as fp:
         fp.write(yaml.safe_dump(kubeconfig, default_flow_style=False))
+
+
+@cli.command()
+def up():
+    """
+    Bring Layer 1 online.
+    """
+    if not os.path.exists("cluster.yml"):
+        error("cluster.yml does not exist. Did you configure?")
+    with open("cluster.yml") as fp:
+        config = yaml.load(fp.read())
+    cluster = Cluster(config)
+    cluster.key_keeper = KeyKeeper("./keys")
+    KubeDNS(cluster).create()
+    KelSystem(cluster).create()
+    Router(cluster).create()
+    ApiCache(cluster).create()
+    ApiDatabase(cluster).create()
+    ApiWeb(cluster).create()
+    click.echo("Done.")
+
+
+resource_map = {
+    "kube-dns": KubeDNS,
+    "kel-system": KelSystem,
+    "router": Router,
+    "api-cache": ApiCache,
+    "api-database": ApiDatabase,
+    "api-web": ApiWeb,
+}
+
+
+@cli.command("show-obj")
+@click.argument("group")
+@click.argument("manifest")
+@click.argument("kind")
+def show_obj(group, manifest, kind):
+    """
+    Write a Layer 1 object to stdout.
+    """
+    if not os.path.exists("cluster.yml"):
+        error("cluster.yml does not exist. Did you configure?")
+    with open("cluster.yml") as fp:
+        config = yaml.load(fp.read())
+    cluster = Cluster(config)
+    cluster.key_keeper = KeyKeeper("./keys")
+    Resource = resource_map.get(manifest)
+    if Resource is None:
+        click.echo('No component named "{}"'.format(manifest))
+        sys.exit(1)
+    objs = Resource(cluster).get_api_objs(group, manifest)[kind]
+    for obj in objs:
+        click.echo(json.dumps(obj.obj, indent=2))
 
 
 def error(msg):

@@ -47,7 +47,7 @@ def layer0(config, pod_network, service_network, dns_service_ip):
     layer["dns-service-ip"] = dns_service_ip
 
 
-def layer1(config, identity_url, subdomain):
+def layer1(config, identity_url, subdomain, router_ip, api_cache_disk_size, api_cache_disk_type, api_database_disk_size, api_database_disk_type):
     layer = config.setdefault("layer-1", {})
     layer.update({
         "identity-url": identity_url,
@@ -59,6 +59,17 @@ def layer1(config, identity_url, subdomain):
                 "name": "kel",
             },
         },
+        "resources": {
+            "router-ip": router_ip,
+            "api-cache-disk": {
+                "size": api_cache_disk_size,
+                "type": api_cache_disk_type,
+            },
+            "api-database-disk": {
+                "size": api_database_disk_size,
+                "type": api_database_disk_type,
+            }
+        }
     })
 
 
