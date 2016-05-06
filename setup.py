@@ -17,6 +17,7 @@ setup(
     name="kelctl",
     long_description=read("README.rst"),
     version="0.0.1",
+    license="Apache 2.0",
     packages=find_packages(),
     entry_points="""
         [console_scripts]
@@ -28,5 +29,9 @@ setup(
         "Click==6.6",
         "kel-cluster",
     ],
-    zip_safe=False
+    zip_safe=False,
+    classifiers=[
+        "License :: OSI Approved :: Apache Software License",
+        "Programming Language :: Python :: 3.5",
+    ],
 )
