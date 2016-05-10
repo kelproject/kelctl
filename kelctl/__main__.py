@@ -133,7 +133,7 @@ def generate_keys():
 @click.option(
     "--channel",
     default="dev",
-    help="Name of cluster to configure.",
+    help="Release channel to configure.",
 )
 @click.option(
     "--layer",
