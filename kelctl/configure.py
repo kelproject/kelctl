@@ -14,19 +14,31 @@ def domain(config, domain):
 
 
 def release(config, channel):
-    r = requests.get("https://storage.googleapis.com/release.kelproject.com/distro/channels.json")
+    base_url = "https://storage.googleapis.com/release.kelproject.com"
+    r = requests.get("{}/distro/channels.json".format(base_url))
     r.raise_for_status()
     channels = json.loads(r.content.decode("utf-8"))
+    if channel.startswith("dev"):
+        sl = channel.count("/")
+        if sl == 0:
+            channel = "dev/master"
+        elif sl == 1:
+            pass
+        else:
+            # @@@ warn
+            channel = "dev/master"
+        _, branch = channel.split("/")
+        tag = channels["dev"][branch]
+    else:
+        tag = channels[channel]
     r = requests.get(
-        "https://storage.googleapis.com/release.kelproject.com/distro/{}/manifest.json".format(
-            channels[channel]
-        )
+        "{}/distro/{}/manifest.json".format(base_url, tag)
     )
     r.raise_for_status()
     config["release"] = json.loads(r.content.decode("utf-8"))
     config["release"].update({
         "channel": channel,
-        "version": channels[channel],
+        "version": tag,
     })
 
 
