@@ -275,9 +275,9 @@ def update_release(channel):
     if current_version == config["release"]["version"]:
         click.echo("No updates available for {} channel".format(channel))
         sys.exit(0)
-    click.echo("Updating config to {} in {} channel".format(config["release"]["version"], channel))
     with open("cluster.yml", "w") as fp:
         fp.write(yaml.safe_dump(config, default_flow_style=False))
+    click.echo("Updated config to {} in {} channel".format(config["release"]["version"], config["release"]["channel"]))
 
 
 @cli.command()
