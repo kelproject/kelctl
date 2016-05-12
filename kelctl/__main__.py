@@ -399,7 +399,7 @@ def up(component):
             except KeyError:
                 error("\"{}\" is not an available component.".format(c))
     for Component in components:
-        Component.create()
+        Component(cluster).create()
     click.echo("Done.")
 
 
