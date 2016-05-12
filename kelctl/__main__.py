@@ -1,3 +1,4 @@
+import collections
 import json
 import os
 import shutil
@@ -361,8 +362,24 @@ def set_kubectl_credentials():
         fp.write(yaml.safe_dump(kubeconfig, default_flow_style=False))
 
 
+COMPONENTS = collections.OrderedDict([
+    ("kube-dns", KubeDNS),
+    ("kel-system", KelSystem),
+    ("router", Router),
+    ("api-cache", ApiCache),
+    ("api-database", ApiDatabase),
+    ("api-web", ApiWeb),
+])
+
+
 @cli.command()
-def up():
+@click.option(
+    "--component",
+    "-c",
+    help="Specify component to bring online.",
+    multiple=True,
+)
+def up(component):
     """
     Bring Layer 1 online.
     """
@@ -372,23 +389,18 @@ def up():
         config = yaml.load(fp.read())
     cluster = Cluster(config)
     cluster.key_keeper = KeyKeeper("./keys")
-    KubeDNS(cluster).create()
-    KelSystem(cluster).create()
-    Router(cluster).create()
-    ApiCache(cluster).create()
-    ApiDatabase(cluster).create()
-    ApiWeb(cluster).create()
+    if not component:
+        components = COMPONENTS.values()
+    else:
+        components = []
+        for c in component:
+            try:
+                components.append(COMPONENTS[c])
+            except KeyError:
+                error("\"{}\" is not an available component.".format(c))
+    for Component in components:
+        Component.create()
     click.echo("Done.")
-
-
-resource_map = {
-    "kube-dns": KubeDNS,
-    "kel-system": KelSystem,
-    "router": Router,
-    "api-cache": ApiCache,
-    "api-database": ApiDatabase,
-    "api-web": ApiWeb,
-}
 
 
 @cli.command("show-obj")
@@ -405,7 +417,7 @@ def show_obj(group, manifest, kind):
         config = yaml.load(fp.read())
     cluster = Cluster(config)
     cluster.key_keeper = KeyKeeper("./keys")
-    Resource = resource_map.get(manifest)
+    Resource = COMPONENTS.get(manifest)
     if Resource is None:
         click.echo('No component named "{}"'.format(manifest))
         sys.exit(1)
