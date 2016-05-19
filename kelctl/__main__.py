@@ -258,7 +258,6 @@ def cmd_configure(name, domain, channel, layer, provider, gce_project_id, gce_re
 @cli.command("update-release")
 @click.option(
     "--channel",
-    default="dev",
     help="Release channel.",
 )
 def update_release(channel):
