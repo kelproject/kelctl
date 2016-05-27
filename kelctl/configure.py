@@ -9,8 +9,11 @@ def name(config, name):
     config["name"] = name
 
 
-def domain(config, domain):
-    config["domain"] = domain
+def domain(config, domain, managed_by):
+    config.update({
+        "domain": domain,
+        "managed_by": managed_by
+    })
 
 
 def release(config, channel):

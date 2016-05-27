@@ -132,6 +132,12 @@ def generate_keys():
     help="Domain of cluster to configure.",
 )
 @click.option(
+    "--managed-by",
+    "managed_by",
+    default="kelproject.com",
+    help="Entity whom manages the cluster.",
+)
+@click.option(
     "--channel",
     default="dev",
     help="Release channel to configure.",
@@ -216,7 +222,7 @@ def generate_keys():
     type=int,
     help="[Layer 1 / GCE] API database disk size (in GB; 100 is default).",
 )
-def cmd_configure(name, domain, channel, layer, provider, gce_project_id, gce_region, gce_zone, master_ip, pod_network, service_network, dns_service_ip, identity_url, api_subdomain, router_ip, api_cache_disk_size, api_cache_disk_type, api_database_disk_size, api_database_disk_type):
+def cmd_configure(name, domain, managed_by, channel, layer, provider, gce_project_id, gce_region, gce_zone, master_ip, pod_network, service_network, dns_service_ip, identity_url, api_subdomain, router_ip, api_cache_disk_size, api_cache_disk_type, api_database_disk_size, api_database_disk_type):
     """
     Configure a Kel cluster.
     """
@@ -238,7 +244,7 @@ def cmd_configure(name, domain, channel, layer, provider, gce_project_id, gce_re
                 error("--gce-zone was not given.")
             config = {}
             configure.name(config, name)
-            configure.domain(config, domain)
+            configure.domain(config, domain, managed_by)
             configure.release(config, channel)
             configure.gce(config, gce_project_id, gce_region, gce_zone)
             configure.layer0(config, pod_network, service_network, dns_service_ip)
