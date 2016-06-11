@@ -16,7 +16,7 @@ setup(
     description="kelctl",
     name="kelctl",
     long_description=read("README.rst"),
-    version="0.0.1",
+    version="0.0.2",
     license="Apache 2.0",
     packages=find_packages(),
     entry_points="""
