@@ -183,7 +183,7 @@ def generate_keys():
 )
 @click.option(
     "--dns-service-ip",
-    default="10.3.0.10",
+    default=None,
     help="IP address for Kubernetes kube-dns service.",
 )
 @click.option(

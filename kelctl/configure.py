@@ -1,3 +1,5 @@
+import ipaddress
+import itertools
 import json
 import random
 import string
@@ -12,7 +14,7 @@ def name(config, name):
 def domain(config, domain, managed_by):
     config.update({
         "domain": domain,
-        "managed_by": managed_by
+        "managed-by": managed_by
     })
 
 
@@ -55,11 +57,26 @@ def gce(config, project_id, region, zone):
     }
 
 
+def nth(iterable, n, default=None):
+    return next(itertools.islice(iterable, n, None), default)
+
+
+def set_layer_key(layer, key, flag, default):
+    if flag is not None:
+        layer[key] = flag
+    else:
+        layer.setdefault(key, default)
+
+
 def layer0(config, pod_network, service_network, dns_service_ip):
     layer = config.setdefault("layer-0", {})
     layer["pod-network"] = pod_network
     layer["service-network"] = service_network
-    layer["dns-service-ip"] = dns_service_ip
+
+    # generate fallback IPs based on service network
+    sn = ipaddress.ip_network(service_network)
+    set_layer_key(layer, None, "kubernetes-service-ip", str(nth(sn, 0)))
+    set_layer_key(layer, dns_service_ip, "dns-service-ip", str(nth(sn, 9)))
 
 
 def layer1(config, identity_url, subdomain, router_ip, api_cache_disk_size, api_cache_disk_type, api_database_disk_size, api_database_disk_type):
