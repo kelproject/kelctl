@@ -24,14 +24,14 @@ setup(
         kelctl=kelctl.__main__:cli
     """,
     install_requires=[
-        "PyYAML==3.11",
-        "requests==2.9.1",
-        "Click==6.6",
+        "PyYAML==3.12",
+        "requests==2.18.4",
+        "Click==6.7",
         "kel-cluster",
     ],
     zip_safe=False,
     classifiers=[
         "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
     ],
 )
