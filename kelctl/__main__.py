@@ -173,12 +173,12 @@ def generate_keys():
 )
 @click.option(
     "--pod-network",
-    default="10.2.0.0/16",
+    default="192.168.0.0/16",
     help="IP address network for Kubernetes pod network.",
 )
 @click.option(
     "--service-network",
-    default="10.3.0.0/16",
+    default="10.96.0.0/12",
     help="IP address network for Kubernetes service network.",
 )
 @click.option(
