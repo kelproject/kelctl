@@ -431,6 +431,23 @@ def show_obj(group, manifest, kind):
         click.echo(json.dumps(obj.obj, indent=2))
 
 
+@cli.command("startup-script")
+@click.argument("component")
+def startup_script(component):
+    if not os.path.exists("cluster.yml"):
+        error("cluster.yml does not exist. Did you configure?")
+    with open("cluster.yml") as fp:
+        config = yaml.load(fp.read())
+    cluster = Cluster(config)
+    r = cluster.get_provider_resource(component)
+    kwargs = {}
+    if component == "etcd":
+        kwargs["i"] = "0"
+    if component == "master":
+        cluster.get_provider_resource("etcd")
+    print(r.get_startup_script(**kwargs))
+
+
 def error(msg):
     click.echo("{}: {}".format(click.style("Error", fg="red"), msg))
     sys.exit(1)
