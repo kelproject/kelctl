@@ -75,8 +75,8 @@ def layer0(config, pod_network, service_network, dns_service_ip):
 
     # generate fallback IPs based on service network
     sn = ipaddress.ip_network(service_network)
-    set_layer_key(layer, None, "kubernetes-service-ip", str(nth(sn, 0)))
-    set_layer_key(layer, dns_service_ip, "dns-service-ip", str(nth(sn, 9)))
+    set_layer_key(layer, "kubernetes-service-ip", None, str(nth(sn, 0)))
+    set_layer_key(layer, "dns-service-ip", dns_service_ip, str(nth(sn, 9)))
 
 
 def layer1(config, identity_url, subdomain, router_ip, api_cache_disk_size, api_cache_disk_type, api_database_disk_size, api_database_disk_type):
